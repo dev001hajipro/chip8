@@ -1,0 +1,10 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color:cadetblue;
+}
+canvas {
+    width:400px;
+    margin: 10px auto;
+    display: block;
+}

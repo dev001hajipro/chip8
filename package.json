@@ -1,0 +1,27 @@
+{
+  "name": "chip8",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dev001hajipro/chip8.git"
+  },
+  "keywords": [
+    "chip8",
+    "emulator"
+  ],
+  "author": "dev001hajipro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dev001hajipro/chip8/issues"
+  },
+  "homepage": "https://github.com/dev001hajipro/chip8#readme",
+  "devDependencies": {
+    "browser-sync": "^2.18.8",
+    "gulp": "^3.9.1"
+  }
+}
