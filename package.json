@@ -22,6 +22,7 @@
   "homepage": "https://github.com/dev001hajipro/chip8#readme",
   "devDependencies": {
     "browser-sync": "^2.18.8",
-    "gulp": "^3.9.1"
+    "gulp": "^3.9.1",
+    "gulp-beautify": "^2.0.1"
   }
 }
