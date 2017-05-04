@@ -36,7 +36,7 @@ const L   = (op) => (op & 0xf000);
 const PC_START = 0x200;
 const LOC_FONTSET = 0x50;
 const disp_clear = () => gfx.fill(0);
-const rand = () => Math.floor( Math.random() * 11 );
+const rand = () => Math.floor(Math.random() * 11);
 const initChip8 = () => {
     pc[0] = PC_START;
     opcode.fill(0); 
@@ -53,9 +53,8 @@ const initChip8 = () => {
     sound_timer.fill(0);
 };
 function memcpy(dest, destoffset, src) {
-    for (var i = 0; i < src.length; i++) {
+    for (var i = 0; i < src.length; i++)
         dest[destoffset+i] = src[i];
-    }
 }
 function showMem8(s, e, mem) {
         var buff = '';
@@ -71,25 +70,23 @@ function showMem16(s, e, mem) {
         }
         console.log(buff);
 }
-function loadGame(gameName, memory, f) {
+function loadGame(gameName, memory, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'PONG', true);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function(e) {
         var dv = new DataView(this.response);
-        var rom2 = new Uint8Array(dv.byteLength / Uint8Array.BYTES_PER_ELEMENT);
-        var len2 = rom2.length;
-        for (var i = 0; i < len2; i++) {
-            rom2[i] = dv.getUint8(i * Uint8Array.BYTES_PER_ELEMENT, false); // false is big-endian
-        }
-        showMem8(0, rom2.length, rom2);
-        memcpy(memory, PC_START, rom2);
+        var rom = new Uint8Array(dv.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+        for (var i = 0; i < rom.length; i++)
+            rom[i] = dv.getUint8(i * Uint8Array.BYTES_PER_ELEMENT, false); // big-endian
+        showMem8(0, rom.length, rom);
+        memcpy(memory, PC_START, rom);
         showMem8(512, 512+246, memory);
-        f && f();
+        cb && cb();
     }
     xhr.send();
 }
-const printUnknownOpcode = (opcode) => console.log('unknownopcode' + (('0000' + opcode.toString(16)).slice(-4)));
+const printUnknown = (opcode) => console.log('unknownopcode' + (('0000' + opcode.toString(16)).slice(-4)));
 function emulateCycle() {
     opcode = (memory[pc[0]] << 8) | memory[pc[0]+1];
     //console.log("Opcode: 0x" + ('0000' + opcode.toString(16)).slice(-4));
@@ -107,7 +104,7 @@ function emulateCycle() {
             pc[0] += 2;
             break;
             default:
-            printUnknownOpcode(opcode);
+            printUnknown(opcode);
         }
         break;
         case 0x1000: // 1NNN goto NNN;
@@ -182,7 +179,7 @@ function emulateCycle() {
             pc[0] += 2;
             break;
             default:
-            printUnknownOpcode(opcode);
+            printUnknown(opcode);
         }
         break;
         case 0x9000:
@@ -228,7 +225,7 @@ function emulateCycle() {
             pc[0] += keypad[V[X(opcode)]] == 0 ? 4 : 2;
             break;
             default:
-            printUnknownOpcode(opcode);
+            printUnknown(opcode);
         }
         break;
         case 0xF000:
@@ -293,11 +290,11 @@ function emulateCycle() {
             }
             break;
             default:
-            printUnknownOpcode(opcode);
+            printUnknown(opcode);
         }
         break;
         default:
-        printUnknownOpcode(opcode);
+        printUnknown(opcode);
     }
     // UPDATE TIMER
     if (delay_timer[0] > 0) delay_timer[0]--;
@@ -306,3 +303,73 @@ function emulateCycle() {
         sound_timer[0]--;
     }
 }
+////////////////
+var keypad = new Uint8Array(16).fill(0);
+function hx(opcode) {
+    return ('0000' + opcode.toString(16)).slice(-4);
+}
+function debugView(x, y) {
+    ctx.clearRect(0, 320, 640, 160);
+    ctx.fillRect(0, 320, 640, 160);
+    var ch = 14 + y; h =14;
+    ctx.strokeStyle = '#0f0';
+    ctx.strokeText('opcode     :' + '0x'+ hx(opcode), x, ch); ch += h;
+    ctx.strokeText('V          :' + V, x, ch);ch += h;
+    ctx.strokeText('pc         :' + pc[0].toString(16), x, ch);ch += h;
+    ctx.strokeText('delay_timer:' + delay_timer, x, ch);ch += h;
+    ctx.strokeText('sound_timer:' + sound_timer,x, ch);ch += h;
+    ctx.strokeText('stack      :' + stack, x, ch);ch += h;
+    ctx.strokeText('sp         :' + sp[0].toString(16), x, ch);ch += h;
+    ctx.strokeText('drawFlag   :' + drawFlag, x, ch);ch += h;
+    ctx.strokeText('keypad     :' + keypad, x, ch);ch += h;
+}
+function inputKey(key, n) {
+    if (key === '1'.charCodeAt(0)) keypad[0x01] = n;
+    if (key === '2'.charCodeAt(0)) keypad[0x02] = n;
+    if (key === '3'.charCodeAt(0)) keypad[0x03] = n;
+    if (key === '4'.charCodeAt(0)) keypad[0x0c] = n;
+    if (key === 'Q'.charCodeAt(0)) keypad[0x04] = n;
+    if (key === 'W'.charCodeAt(0)) keypad[0x05] = n;
+    if (key === 'E'.charCodeAt(0)) keypad[0x06] = n;
+    if (key === 'R'.charCodeAt(0)) keypad[0x0d] = n;
+    if (key === 'A'.charCodeAt(0)) keypad[0x07] = n;
+    if (key === 'S'.charCodeAt(0)) keypad[0x08] = n;
+    if (key === 'D'.charCodeAt(0)) keypad[0x09] = n;
+    if (key === 'F'.charCodeAt(0)) keypad[0x0e] = n;
+    if (key === 'Z'.charCodeAt(0)) keypad[0x0a] = n;
+    if (key === 'X'.charCodeAt(0)) keypad[0x00] = n;
+    if (key === 'C'.charCodeAt(0)) keypad[0x0b] = n;
+    if (key === 'V'.charCodeAt(0)) keypad[0x0f] = n;
+}
+function loop() {
+    requestAnimationFrame(loop);
+    emulateCycle();
+    debugView(10, 320);
+    if (drawFlag) {
+        var scale = 10;
+        var imageData = ctx.createImageData(64*scale,32*scale);
+        var data = imageData.data;
+        for (var i = 0; i < data.length; i += 4) {
+            var w = 64 * 4 * scale; //rgba // TODO: devicePixelRatio
+            var y = Math.floor(i / w);
+            var x = i % w / 4;
+            if (gfx[64*Math.floor(y/scale)+Math.floor(x/scale)]) {
+                data[i+0] = data[i+1] = data[i+2] = 240;
+                data[i+3] = 255;
+            } else {
+                data[i+0] = data[i+1] = data[i+2] = 40;
+                data[i+3] = 255;
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        drawFlag = false;
+    }
+}
+var ctx = document.getElementById('c').getContext('2d');
+ctx.font = "16px 'Courier New'"; // web safe monospace font.
+onkeydown = (e) => inputKey(e.keyCode, 1);
+onkeyup = (e) => inputKey(e.keyCode, 0);
+initChip8();
+loadGame('PONG', memory, function() {
+    loop();
+});
