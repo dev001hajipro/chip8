@@ -34,7 +34,6 @@ const X   = (op) => ((op & 0x0F00) >> 8);
 const Y   = (op) => ((op & 0x00F0) >> 4);
 const L   = (op) => (op & 0xf000);
 const PC_START = 0x200;
-const LOC_FONTSET = 0x50;
 const disp_clear = () => gfx.fill(0);
 const rand = () => Math.floor(Math.random() * 11);
 const initChip8 = () => {
@@ -45,29 +44,16 @@ const initChip8 = () => {
     memory.fill(0);
     V.fill(0);
     stack.fill(0);
-    for (var i = 0; i < 80; i++) {
+    for (var i = 0; i < 80; i++)
         memory[i] = chip8_fontset[i];
-    }
     drawFlag = true;
     delay_timer.fill(0);
     sound_timer.fill(0);
 };
-function memcpy(dest, destoffset, src) {
-    for (var i = 0; i < src.length; i++)
-        dest[destoffset+i] = src[i];
-}
 function showMem8(s, e, mem) {
         var buff = '';
-        for (var i = s; i < e; i++) {
+        for (var i = s; i < e; i++)
             buff += ('00' + mem[i].toString(16)).slice(-2);
-        }
-        console.log(buff);
-}
-function showMem16(s, e, mem) {
-        var buff = '';
-        for (var i = s; i < e; i++) {
-            buff += ('0000' + mem[i].toString(16)).slice(-4);
-        }
         console.log(buff);
 }
 function loadGame(gameName, memory, cb) {
@@ -80,7 +66,8 @@ function loadGame(gameName, memory, cb) {
         for (var i = 0; i < rom.length; i++)
             rom[i] = dv.getUint8(i * Uint8Array.BYTES_PER_ELEMENT, false); // big-endian
         showMem8(0, rom.length, rom);
-        memcpy(memory, PC_START, rom);
+        for (var i = 0; i < rom.length; i++)
+            memory[PC_START+i] = rom[i];
         showMem8(512, 512+246, memory);
         cb && cb();
     }
@@ -275,7 +262,6 @@ function emulateCycle() {
             {
                 for (var i = 0; i <= X(opcode); i++)
                     memory[I[0]+i] = V[i];
-                
                 I[0] = I[0] + (X(opcode)) + 1;
                 pc[0] += 2;
             }
@@ -284,7 +270,6 @@ function emulateCycle() {
             {
                 for (var i = 0; i <= X(opcode); i++)
                     V[i] = memory[I[0]+i];
-                
                 I[0] = I[0] + (X(opcode)) + 1;
                 pc[0] += 2;
             }
@@ -296,20 +281,15 @@ function emulateCycle() {
         default:
         printUnknown(opcode);
     }
-    // UPDATE TIMER
     if (delay_timer[0] > 0) delay_timer[0]--;
     if (sound_timer[0] > 0) {
         if (sound_timer[0] == 1) console.log('BEEP\n');
         sound_timer[0]--;
     }
 }
-////////////////
 var keypad = new Uint8Array(16).fill(0);
-function hx(opcode) {
-    return ('0000' + opcode.toString(16)).slice(-4);
-}
+const hx = (opcode) => ('0000' + opcode.toString(16)).slice(-4);
 function debugView(x, y) {
-    ctx.clearRect(0, 320, 640, 160);
     ctx.fillRect(0, 320, 640, 160);
     var ch = 14 + y; h =14;
     ctx.strokeStyle = '#0f0';
@@ -345,25 +325,22 @@ function loop() {
     requestAnimationFrame(loop);
     emulateCycle();
     debugView(10, 320);
-    if (drawFlag) {
-        var scale = 10;
-        var imageData = ctx.createImageData(64*scale,32*scale);
-        var data = imageData.data;
-        for (var i = 0; i < data.length; i += 4) {
-            var w = 64 * 4 * scale; //rgba // TODO: devicePixelRatio
-            var y = Math.floor(i / w);
-            var x = i % w / 4;
-            if (gfx[64*Math.floor(y/scale)+Math.floor(x/scale)]) {
-                data[i+0] = data[i+1] = data[i+2] = 240;
-                data[i+3] = 255;
-            } else {
-                data[i+0] = data[i+1] = data[i+2] = 40;
-                data[i+3] = 255;
-            }
+    if (!drawFlag) return;
+    var scale = 10;
+    var imageData = ctx.createImageData(64*scale,32*scale);
+    var data = imageData.data;
+    for (var i = 0; i < data.length; i += 4) {
+        var w = 64 * 4 * scale; //rgba // TODO: devicePixelRatio
+        var y = Math.floor(i / w);
+        var x = i % w / 4;
+        if (gfx[64*Math.floor(y/scale)+Math.floor(x/scale)]) {
+            data[i+0] = data[i+1] = data[i+2] = 240;
+        } else {
+            data[i+0] = data[i+1] = data[i+2] = 40;
         }
-        ctx.putImageData(imageData, 0, 0);
-        drawFlag = false;
+        data[i+3] = 255;
     }
+    ctx.putImageData(imageData, 0, 0);
 }
 var ctx = document.getElementById('c').getContext('2d');
 ctx.font = "16px 'Courier New'"; // web safe monospace font.
