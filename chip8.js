@@ -123,51 +123,43 @@ function emulateCycle() {
         switch (N(opcode)) {
             case 0x0000: // 8XY0
             V[X(opcode)] = V[Y(opcode)];
-            pc[0] += 2;
             break;
             case 0x0001:
             V[X(opcode)] |= V[Y(opcode)];
             V[0xF] = 0;
-            pc[0] += 2;
             break;
             case 0x0002:
             V[X(opcode)] &= V[Y(opcode)];
             V[0xF] = 0;
-            pc[0] += 2;
             break;
             case 0x0003:
             V[X(opcode)] ^= V[Y(opcode)];
             V[0xF] = 0;
-            pc[0] += 2;
             break;
             case 0x0004: // 8XY4 Vx += Vy
             V[0xF] = V[Y(opcode)] > (0xFF - V[X(opcode)]) ? 1 : 0; // carry is 1
             V[X(opcode)] += V[Y(opcode)];
-            pc[0] += 2;
             break;
             case 0x0005:// 8XY5 Vx -= Vy
             V[0xF] = V[Y(opcode)] > V[X(opcode)] ? 0 : 1; // borrow is 0. (Chip8 defined that the NOT-BORROW is 1.)
             V[X(opcode)] -= V[Y(opcode)];
-            pc[0] += 2;
             break;
             case 0x0006:// 8XY6 Vx >> 1
             V[0xF] = V[X(opcode)] & 0x1;
             V[X(opcode)] >>= 0x01;
-            pc[0] += 2;
             break;
             case 0x0007:// 8XY7 Vx=Vy-Vx
             V[0xF] = V[Y(opcode)] < V[X(opcode)] ? 0 : 1; // borrow is 0. (Chip8 defined that the NOT-BORROW is 1.)
             V[X(opcode)] = V[Y(opcode)] - V[X(opcode)];
-            pc[0] += 2;
             break;
             case 0x000E:// Vx << 1
             V[0xF] = V[X(opcode)] >> 0x7;
             V[X(opcode)] <<= 0x01;
-            pc[0] += 2;
             break;
             default:
             printUnknown(opcode);
         }
+        pc[0] += 2;
         break;
         case 0x9000:
         pc[0] += V[X(opcode)] != V[Y(opcode)] ? 4 : 2;
@@ -300,8 +292,8 @@ function debugView(x, y) {
     ctx.strokeText('sound_timer:' + sound_timer,x, ch);ch += h;
     ctx.strokeText('stack      :' + stack, x, ch);ch += h;
     ctx.strokeText('sp         :' + sp[0].toString(16), x, ch);ch += h;
-    ctx.strokeText('drawFlag   :' + drawFlag, x, ch);ch += h;
     ctx.strokeText('keypad     :' + keypad, x, ch);ch += h;
+    ctx.strokeText('drawFlag   :' + drawFlag, x, ch);ch += h;
 }
 function inputKey(key, n) {
     if (key === '1'.charCodeAt(0)) keypad[0x01] = n;
